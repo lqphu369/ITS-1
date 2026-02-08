@@ -1,0 +1,57 @@
+# Python / Django
+__pycache__/
+*.py[cod]
+*.pyo
+*$py.class
+*.pyd
+*.log
+*.pot
+*.pyc
+
+pycache/
+*.py[cod]
+
+.env
+venv/
+
+# Django stuff
+*.sqlite3
+db.sqlite3
+media/
+staticfiles/
+
+# Docker
+docker-data/
+postgres_data/
+*.pid
+
+# VS Code / IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Coverage / Test
+htmlcov/
+.coverage
+.tox/
+.pytest_cache/
+
+.vs/
+
+
+venv/
+env/
+
+# Python cache
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+
+**/migrations/__pycache__
+

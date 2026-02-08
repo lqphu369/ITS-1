@@ -1,0 +1,263 @@
+﻿{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Trả xe - ITS Rental{% endblock %}
+
+{% block content %}
+<main class="flex-1 w-full max-w-[1280px] mx-auto px-4 md:px-6 lg:px-10 py-6 md:py-10">
+
+    <!-- Breadcrumbs -->
+    <div class="mb-6">
+        <nav class="flex text-sm font-medium text-slate-500 dark:text-slate-400">
+            <a href="{% url 'frontend:home' %}" class="hover:text-primary transition">Trang chủ</a>
+            <span class="mx-2">/</span>
+            <a href="{% url 'frontend:order_list' %}" class="hover:text-primary transition">Đơn của tôi</a>
+            <span class="mx-2">/</span>
+            <span class="text-slate-900 dark:text-white">Trả xe</span>
+        </nav>
+    </div>
+
+    <!-- Page Heading -->
+    <div class="flex flex-col md:flex-row md:items-end justify-between gap-4 mb-8">
+        <div>
+            <h1 class="text-3xl md:text-4xl font-black text-slate-900 dark:text-white tracking-tight mb-2">
+                Trả xe: {{ booking.vehicle.name }}
+            </h1>
+            <p class="text-slate-500 dark:text-slate-400 text-base">
+                ID đơn hàng: <span class="font-mono text-slate-700 dark:text-slate-300">#{{ booking.id }}</span> •
+                Vui lòng xác nhận tình trạng xe và thời gian trả xe bên dưới
+            </p>
+        </div>
+    </div>
+
+    <!-- Layout Grid -->
+    <div class="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
+
+        <!-- Left: Return Form -->
+        <div class="lg:col-span-8 flex flex-col gap-6">
+
+            <form method="POST" enctype="multipart/form-data">
+                {% csrf_token %}
+
+                <!-- Return Time -->
+                <section class="bg-white dark:bg-slate-800 rounded-xl shadow-sm border border-slate-200 dark:border-slate-700 p-6 md:p-8">
+                    <div class="flex items-center gap-3 mb-6">
+                        <span class="material-symbols-outlined text-primary text-2xl">schedule</span>
+                        <h3 class="text-xl font-bold text-slate-900 dark:text-white">Chi tiết trả xe</h3>
+                    </div>
+
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        <div class="flex flex-col gap-2">
+                            <label for="return-date" class="text-sm font-semibold text-slate-700 dark:text-slate-300">Ngày trả thực tế</label>
+                            <input type="date" id="return-date" name="actual_return_date" required
+                                   class="h-11 rounded-lg border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-900 text-slate-900 dark:text-white focus:ring-2 focus:ring-primary focus:border-transparent">
+                        </div>
+
+                        <div class="flex flex-col gap-2">
+                            <label for="return-time" class="text-sm font-semibold text-slate-700 dark:text-slate-300">Giờ trả thực tế</label>
+                            <input type="time" id="return-time" name="actual_return_time" required
+                                   class="h-11 rounded-lg border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-900 text-slate-900 dark:text-white focus:ring-2 focus:ring-primary focus:border-transparent">
+                        </div>
+                    </div>
+
+                    {% if is_late %}
+                    <div class="mt-6 p-4 bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-700/50 rounded-lg flex items-start gap-3">
+                        <span class="material-symbols-outlined text-amber-600 dark:text-amber-500 mt-0.5">warning</span>
+                        <div>
+                            <p class="text-amber-800 dark:text-amber-200 font-bold text-sm">Phát hiện trả xe trễ</p>
+                            <p class="text-amber-700 dark:text-amber-300 text-sm mt-1">
+                                Xe này đang được trả <span class="font-bold">{{ late_hours }} giờ</span> sau thời gian dự kiến.
+                                Phí trễ <span class="font-bold">{{ late_fee|floatformat:0 }}đ</span> đã được thêm vào tổng tiền.
+                            </p>
+                        </div>
+                    </div>
+                    {% endif %}
+                </section>
+
+                <!-- Vehicle Condition -->
+                <section class="bg-white dark:bg-slate-800 rounded-xl shadow-sm border border-slate-200 dark:border-slate-700 p-6 md:p-8">
+                    <div class="flex items-center gap-3 mb-6">
+                        <span class="material-symbols-outlined text-primary text-2xl">car_crash</span>
+                        <h3 class="text-xl font-bold text-slate-900 dark:text-white">Báo cáo tình trạng</h3>
+                    </div>
+
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
+                        <div class="flex flex-col gap-2">
+                            <label for="odometer" class="text-sm font-semibold text-slate-700 dark:text-slate-300">
+                                Số km đã đi
+                            </label>
+                            <div class="relative">
+                                <input type="number" id="odometer" name="odometer" placeholder="45020" required
+                                       class="w-full h-11 pl-4 pr-12 rounded-lg border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-900 text-slate-900 dark:text-white focus:ring-2 focus:ring-primary focus:border-transparent">
+                                <span class="absolute right-4 top-1/2 -translate-y-1/2 text-slate-400 text-sm font-medium">km</span>
+                            </div>
+                        </div>
+
+                        <div class="flex flex-col gap-2">
+                            <label for="fuel" class="text-sm font-semibold text-slate-700 dark:text-slate-300">Mức nhiên liệu</label>
+                            <select id="fuel" name="fuel_level"
+                                    class="h-11 rounded-lg border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-900 text-slate-900 dark:text-white focus:ring-2 focus:ring-primary focus:border-transparent">
+                                <option value="FULL">Đầy (100%)</option>
+                                <option value="7/8">7/8</option>
+                                <option value="3/4">3/4</option>
+                                <option value="1/2">1/2</option>
+                                <option value="1/4">1/4</option>
+                                <option value="EMPTY">Hết</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <div class="space-y-4 mb-8">
+                        <p class="text-sm font-semibold text-slate-700 dark:text-slate-300">Danh sách kiểm tra</p>
+                        <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
+                            <label class="flex items-center gap-3 p-3 border border-slate-200 dark:border-slate-700 rounded-lg cursor-pointer hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors">
+                                <input type="checkbox" name="exterior_clean" checked
+                                       class="size-5 rounded border-slate-300 text-primary focus:ring-primary">
+                                <span class="text-sm font-medium text-slate-700 dark:text-slate-300">Ngoại thất sạch</span>
+                            </label>
+
+                            <label class="flex items-center gap-3 p-3 border border-slate-200 dark:border-slate-700 rounded-lg cursor-pointer hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors">
+                                <input type="checkbox" name="interior_clean" checked
+                                       class="size-5 rounded border-slate-300 text-primary focus:ring-primary">
+                                <span class="text-sm font-medium text-slate-700 dark:text-slate-300">Nội thất sạch</span>
+                            </label>
+
+                            <label class="flex items-center gap-3 p-3 border border-slate-200 dark:border-slate-700 rounded-lg cursor-pointer hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors">
+                                <input type="checkbox" name="no_damage" checked
+                                       class="size-5 rounded border-slate-300 text-primary focus:ring-primary">
+                                <span class="text-sm font-medium text-slate-700 dark:text-slate-300">Không hư hỏng mới</span>
+                            </label>
+
+                            <label class="flex items-center gap-3 p-3 border border-slate-200 dark:border-slate-700 rounded-lg cursor-pointer hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors">
+                                <input type="checkbox" name="keys_returned" checked
+                                       class="size-5 rounded border-slate-300 text-primary focus:ring-primary">
+                                <span class="text-sm font-medium text-slate-700 dark:text-slate-300">Đã trả chìa khóa</span>
+                            </label>
+
+                            <label class="flex items-center gap-3 p-3 border border-slate-200 dark:border-slate-700 rounded-lg cursor-pointer hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors">
+                                <input type="checkbox" name="documents_present" checked
+                                       class="size-5 rounded border-slate-300 text-primary focus:ring-primary">
+                                <span class="text-sm font-medium text-slate-700 dark:text-slate-300">Giấy tờ đầy đủ</span>
+                            </label>
+                        </div>
+                    </div>
+
+                    <div class="flex flex-col gap-2">
+                        <label for="notes" class="text-sm font-semibold text-slate-700 dark:text-slate-300">Ghi chú tình trạng</label>
+                        <textarea id="notes" name="condition_notes" rows="4" placeholder="Mô tả bất kỳ vết xước, vết lõm hoặc vấn đề mới..."
+                                  class="w-full rounded-lg border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-900 text-slate-900 dark:text-white focus:ring-2 focus:ring-primary focus:border-transparent p-3"></textarea>
+                    </div>
+                </section>
+
+                <!-- Evidence Upload -->
+                <section class="bg-white dark:bg-slate-800 rounded-xl shadow-sm border border-slate-200 dark:border-slate-700 p-6 md:p-8">
+                    <div class="flex items-center gap-3 mb-6">
+                        <span class="material-symbols-outlined text-primary text-2xl">add_a_photo</span>
+                        <h3 class="text-xl font-bold text-slate-900 dark:text-white">Ảnh chứng cứ</h3>
+                    </div>
+
+                    <div class="border-2 border-dashed border-slate-300 dark:border-slate-600 rounded-xl p-10 flex flex-col items-center justify-center text-center cursor-pointer hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors group">
+                        <div class="size-16 rounded-full bg-slate-100 dark:bg-slate-700 flex items-center justify-center mb-4 group-hover:scale-110 transition-transform">
+                            <span class="material-symbols-outlined text-slate-400 dark:text-slate-500 text-3xl">cloud_upload</span>
+                        </div>
+                        <p class="text-slate-900 dark:text-white font-semibold text-lg mb-1">Click để tải lên hoặc kéo thả</p>
+                        <p class="text-slate-500 dark:text-slate-400 text-sm">SVG, PNG, JPG hoặc GIF (tối đa 5MB)</p>
+                        <input type="file" name="evidence_photos" multiple accept="image/*" class="hidden">
+                    </div>
+                </section>
+
+                <!-- Submit Actions -->
+                <div class="flex flex-col-reverse sm:flex-row items-center justify-end gap-4 pt-2">
+                    <a href="{% url 'frontend:order_list' %}"
+                       class="w-full sm:w-auto bg-transparent hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-600 dark:text-slate-400 font-semibold py-2.5 px-4 rounded-lg transition-colors">
+                        Hủy
+                    </a>
+                    <button type="submit"
+                            class="w-full sm:w-auto bg-primary hover:bg-sky-600 text-white font-bold py-3.5 px-8 rounded-lg shadow-sm shadow-primary/30 transition-all active:scale-[0.98] flex items-center justify-center gap-2">
+                        <span>Hoàn tất trả xe</span>
+                        <span class="material-symbols-outlined text-[20px]">check_circle</span>
+                    </button>
+                </div>
+            </form>
+        </div>
+
+        <!-- Right: Summary (Sticky) -->
+        <div class="lg:col-span-4 space-y-6 lg:sticky lg:top-24">
+            <!-- Vehicle & Customer Card -->
+            <div class="bg-white dark:bg-slate-800 rounded-xl shadow-sm border border-slate-200 dark:border-slate-700 overflow-hidden">
+                <div class="h-40 w-full relative">
+                    <img class="w-full h-full object-cover"
+                         src="{% if booking.vehicle.image %}{{ booking.vehicle.image.url }}{% else %}{% static 'img/placeholder.jpg' %}{% endif %}"
+                         alt="{{ booking.vehicle.name }}">
+                    <div class="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent flex items-end p-4">
+                        <h3 class="text-white font-bold text-lg">{{ booking.vehicle.name }}</h3>
+                    </div>
+                </div>
+
+                <div class="p-5">
+                    <div class="grid grid-cols-2 gap-y-4 text-sm">
+                        <div class="col-span-2 flex justify-between border-b border-slate-100 dark:border-slate-800 pb-3">
+                            <span class="text-slate-500 dark:text-slate-400">Biển số</span>
+                            <span class="font-mono font-medium text-slate-900 dark:text-white">{{ booking.vehicle.license_plate|default:"N/A" }}</span>
+                        </div>
+
+                        <div class="col-span-2 flex justify-between border-b border-slate-100 dark:border-slate-800 pb-3">
+                            <span class="text-slate-500 dark:text-slate-400">Khách hàng</span>
+                            <span class="font-medium text-slate-900 dark:text-white">{{ booking.customer.get_full_name|default:booking.customer.username }}</span>
+                        </div>
+
+                        <div class="col-span-2 flex justify-between">
+                            <span class="text-slate-500 dark:text-slate-400">Hạn trả</span>
+                            <span class="font-medium text-slate-900 dark:text-white text-right">
+                                {{ booking.return_date|date:"d/m/Y" }}<br>
+                                <span class="text-xs text-slate-400">{{ booking.return_date|date:"H:i" }}</span>
+                            </span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Payment Summary -->
+            <div class="bg-white dark:bg-slate-800 rounded-xl shadow-sm border border-slate-200 dark:border-slate-700 p-6">
+                <h3 class="text-lg font-bold text-slate-900 dark:text-white mb-6">Tóm tắt thanh toán</h3>
+
+                <div class="space-y-4 text-sm mb-6">
+                    <div class="flex justify-between items-center text-slate-600 dark:text-slate-300">
+                        <span>Giá gốc (Đã thanh toán)</span>
+                        <span class="font-medium">{{ booking.total_price|floatformat:0 }}đ</span>
+                    </div>
+
+                    {% if late_fee %}
+                    <div class="flex justify-between items-center text-amber-600 dark:text-amber-500">
+                        <div class="flex items-center gap-1">
+                            <span>Phí trễ</span>
+                            <span class="material-symbols-outlined text-[16px] cursor-help" title="{{ late_hours }} giờ trễ @ 15đ/giờ">info</span>
+                        </div>
+                        <span class="font-bold">+{{ late_fee|floatformat:0 }}đ</span>
+                    </div>
+                    {% endif %}
+
+                    <div class="flex justify-between items-center text-slate-600 dark:text-slate-300">
+                        <span>Thuế & phí (10%)</span>
+                        <span class="font-medium">{{ tax|floatformat:0 }}đ</span>
+                    </div>
+
+                    <div class="h-px bg-slate-200 dark:bg-slate-700 my-2"></div>
+
+                    <div class="flex justify-between items-end">
+                        <span class="text-slate-900 dark:text-white font-bold text-lg">Tổng phải trả</span>
+                        <span class="text-primary font-black text-2xl tracking-tight">{{ final_total|floatformat:0 }}đ</span>
+                    </div>
+                    <p class="text-xs text-slate-400 text-right mt-1">Bao gồm phí trễ và phụ phí</p>
+                </div>
+            </div>
+
+            <!-- Helper Info -->
+            <div class="bg-blue-50 dark:bg-blue-900/20 rounded-lg p-4 text-xs text-blue-800 dark:text-blue-200 leading-relaxed border border-blue-100 dark:border-blue-800">
+                <strong>Lưu ý:</strong> Phí cuối cùng sẽ tự động được xử lý bằng thẻ tín dụng đã lưu kết thúc •••• 4242.
+            </div>
+        </div>
+
+    </div>
+</main>
+{% endblock %}

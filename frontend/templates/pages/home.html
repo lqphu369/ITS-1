@@ -1,0 +1,114 @@
+﻿{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Trang chủ - ITS Rental{% endblock %}
+
+{% block content %}
+<div class="w-full bg-background-light dark:bg-background-dark">
+    <div class="max-w-[960px] mx-auto px-4 md:px-10 py-5">
+        <div class="flex min-h-[480px] flex-col gap-6 bg-cover bg-center bg-no-repeat rounded-xl items-start justify-end px-6 pb-10 md:px-10 shadow-lg relative overflow-hidden"
+             style='background-image: linear-gradient(rgba(0, 0, 0, 0.1) 0%, rgba(0, 0, 0, 0.6) 100%), url("https://images.unsplash.com/photo-1449965408869-eaa3f722e40d?w=1200");'>
+
+            <div class="flex flex-col gap-2 text-left z-10 max-w-2xl">
+                <h1 class="text-white text-4xl md:text-5xl font-black leading-tight tracking-tight drop-shadow-md">
+                    Tìm xe hoàn hảo cho nhu cầu hàng ngày của bạn
+                </h1>
+                <h2 class="text-slate-100 text-base md:text-lg font-medium drop-shadow-sm">
+                    Thuê xe linh hoạt theo ngày với giá cả phải chăng. Đặt xe chỉ trong vài giây.
+                </h2>
+            </div>
+
+            <form method="GET" action="{% url 'frontend:vehicle_list' %}" class="w-full max-w-[600px] bg-white dark:bg-slate-800 p-2 rounded-xl shadow-xl border border-slate-200 dark:border-slate-700 z-10">
+                <div class="flex flex-col md:flex-row w-full items-center gap-2">
+                    <div class="flex-1 w-full grid grid-cols-2 gap-2">
+                        <label class="relative block">
+                            <span class="absolute inset-y-0 left-0 flex items-center pl-3 text-slate-400">
+                                <span class="material-symbols-outlined text-[20px]">calendar_today</span>
+                            </span>
+                            <input name="pickup_date" class="w-full bg-slate-50 dark:bg-slate-900 border-0 rounded-lg py-3 pl-10 pr-3 text-sm text-slate-900 dark:text-white placeholder-slate-500 focus:ring-2 focus:ring-primary"
+                                   type="date" required>
+                        </label>
+                        <label class="relative block">
+                            <span class="absolute inset-y-0 left-0 flex items-center pl-3 text-slate-400">
+                                <span class="material-symbols-outlined text-[20px]">event</span>
+                            </span>
+                            <input name="return_date" class="w-full bg-slate-50 dark:bg-slate-900 border-0 rounded-lg py-3 pl-10 pr-3 text-sm text-slate-900 dark:text-white placeholder-slate-500 focus:ring-2 focus:ring-primary"
+                                   type="date" required>
+                        </label>
+                    </div>
+                    <button type="submit" class="w-full md:w-auto h-12 md:h-full px-6 bg-primary hover:bg-sky-600 text-white text-sm font-bold rounded-lg transition-colors flex items-center justify-center gap-2 shadow-sm">
+                        <span class="material-symbols-outlined text-[20px]">search</span>
+                        <span>Tìm kiếm</span>
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<div class="w-full bg-background-light dark:bg-background-dark">
+    <div class="max-w-[960px] mx-auto px-4 md:px-10">
+        <div class="bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-800 rounded-lg p-3 my-4 flex items-center justify-center gap-2">
+            <span class="material-symbols-outlined text-amber-600 dark:text-amber-400">warning</span>
+            <p class="text-amber-800 dark:text-amber-200 text-sm font-medium text-center">
+                Lưu ý: Phụ phí 20% áp dụng cho tất cả đơn thuê vào Thứ 7 và Chủ nhật.
+            </p>
+        </div>
+    </div>
+</div>
+
+<div class="w-full bg-background-light dark:bg-background-dark pb-20">
+    <div class="max-w-[960px] mx-auto px-4 md:px-10">
+        <h2 class="text-slate-900 dark:text-white text-2xl font-bold leading-tight tracking-tight pb-6 pt-2">Xe nổi bật</h2>
+
+        <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6">
+            {% for vehicle in featured_vehicles %}
+            <div class="flex flex-col gap-3 bg-white dark:bg-slate-800 p-3 rounded-xl shadow-sm border border-slate-200 dark:border-slate-700 hover:shadow-md transition-shadow {% if vehicle.status|upper != 'AVAILABLE' %}opacity-75 grayscale-[50%]{% endif %}">
+                <a href="{% url 'frontend:vehicle_detail' vehicle.id %}">
+                    <div class="w-full aspect-video bg-cover bg-center rounded-lg"
+                         style="background-image: url('{% if vehicle.image %}{{ vehicle.image.url }}{% else %}{% static 'frontend/img/placeholder.jpg' %}{% endif %}');">
+                    </div>
+                </a>
+
+                <div class="px-1 pb-1">
+                    <div class="flex justify-between items-start mb-1">
+                        <div>
+                            <p class="text-slate-900 dark:text-white text-lg font-bold">{{ vehicle.name }}</p>
+                            <p class="text-slate-500 dark:text-slate-400 text-sm">{{ vehicle.vehicle_type }}</p>
+                        </div>
+
+                        {% if vehicle.status|upper == 'AVAILABLE' %}
+                        <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-emerald-100 text-emerald-800 border border-emerald-200">
+                            Có sẵn
+                        </span>
+                        {% else %}
+                        <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-slate-100 text-slate-800 border border-slate-200">
+                            Đã thuê
+                        </span>
+                        {% endif %}
+                    </div>
+
+                    <div class="flex items-end justify-between mt-3">
+                        <p class="text-primary text-xl font-bold">
+                            {{ vehicle.daily_rate|default:vehicle.price_per_day|floatformat:0 }}đ
+                            <span class="text-sm font-normal text-slate-500 dark:text-slate-400">/ngày</span>
+                        </p>
+
+                        {% if vehicle.status|upper == 'AVAILABLE' %}
+                        <a href="{% url 'frontend:vehicle_detail' vehicle.id %}" class="text-sm font-medium text-primary hover:text-sky-600 underline">Xem chi tiết</a>
+                        {% else %}
+                        <span class="text-sm font-medium text-slate-400 cursor-not-allowed">Không khả dụng</span>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+            {% empty %}
+            <div class="col-span-3 text-center py-12">
+                <span class="material-symbols-outlined text-slate-300 text-6xl">directions_car_filled</span>
+                <p class="text-slate-500 mt-4">Chưa có xe nào</p>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+</div>
+{% endblock %}

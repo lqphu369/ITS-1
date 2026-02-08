@@ -1,0 +1,177 @@
+﻿{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Thống kê - ITS Rental{% endblock %}
+
+{% block header %}
+<header class="w-full bg-slate-900 text-white border-b border-slate-800 px-10 py-4 flex justify-between items-center sticky top-0 z-50">
+    <div class="flex items-center gap-3">
+        <span class="material-symbols-outlined text-primary text-3xl">admin_panel_settings</span>
+        <h2 class="font-black text-xl tracking-tight uppercase">ITS Admin Panel</h2>
+    </div>
+    <div class="flex items-center gap-6">
+        <div class="text-right leading-none">
+            <p class="text-sm font-bold">{{ user.username }}</p>
+            <span class="text-[10px] text-primary font-black uppercase">Hệ thống quản trị</span>
+        </div>
+        <a href="{% url 'frontend:logout' %}" class="bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded-lg text-sm font-bold transition-all">
+            Thoát hệ thống
+        </a>
+    </div>
+</header>
+{% endblock %}
+
+{% block content %}
+<div class="flex min-h-[calc(100vh-68px)]">
+    <aside class="w-64 hidden lg:block bg-white dark:bg-slate-800 border-r border-slate-200 dark:border-slate-700 p-4">
+        <nav class="space-y-1">
+            <a href="{% url 'frontend:admin_dashboard' %}" class="flex items-center gap-3 px-3 py-2.5 text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-700 rounded-lg font-medium transition-all">
+                <span class="material-symbols-outlined">dashboard</span> Dashboard
+            </a>
+
+            <a href="{% url 'frontend:admin_vehicles' %}" class="flex items-center gap-3 px-3 py-2.5 text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-700 rounded-lg font-medium transition-all">
+                <span class="material-symbols-outlined">directions_car</span> Quản lý Xe
+            </a>
+
+            <a href="{% url 'frontend:admin_bookings' %}" class="flex items-center gap-3 px-3 py-2.5 text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-700 rounded-lg font-medium transition-all">
+                <span class="material-symbols-outlined">calendar_month</span> Đặt chỗ
+            </a>
+
+            <a href="{% url 'frontend:admin_stats' %}" class="flex items-center gap-3 px-3 py-2.5 bg-primary/10 text-primary rounded-lg font-medium transition-all">
+                <span class="material-symbols-outlined">bar_chart</span> Thống kê
+            </a>
+        </nav>
+    </aside>
+
+    <div class="flex-1 p-6 lg:p-10 bg-slate-50 dark:bg-slate-900 transition-colors duration-300">
+        <h1 class="text-2xl font-black text-slate-900 dark:text-white mb-8 tracking-tight">Thống kê hiệu quả (ITS Real-time)</h1>
+
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
+            <div class="bg-white dark:bg-slate-800 p-6 rounded-xl shadow-sm border border-slate-200 dark:border-slate-700 flex items-center justify-between hover:shadow-md transition-shadow">
+                <div>
+                    <p class="text-sm font-medium text-slate-500 dark:text-slate-400">Đơn hoàn thành</p>
+                    <p class="text-2xl font-bold text-slate-900 dark:text-white mt-1">{{ total_completed }}</p>
+                </div>
+                <div class="p-3 bg-green-100 dark:bg-green-900/30 text-green-600 rounded-lg">
+                    <span class="material-symbols-outlined">task_alt</span>
+                </div>
+            </div>
+
+            <div class="bg-white dark:bg-slate-800 p-6 rounded-xl shadow-sm border border-slate-200 dark:border-slate-700 flex items-center justify-between hover:shadow-md transition-shadow">
+                <div>
+                    <p class="text-sm font-medium text-slate-500 dark:text-slate-400">Đơn bị hủy</p>
+                    <p class="text-2xl font-bold text-slate-900 dark:text-white mt-1">{{ total_cancelled }}</p>
+                </div>
+                <div class="p-3 bg-red-100 dark:bg-red-900/30 text-red-600 rounded-lg">
+                    <span class="material-symbols-outlined">cancel</span>
+                </div>
+            </div>
+        </div>
+
+        <div class="bg-white dark:bg-slate-800 rounded-xl shadow-sm border border-slate-200 dark:border-slate-700 overflow-hidden">
+            <div class="p-6 border-b border-slate-200 dark:border-slate-700 flex justify-between items-center bg-slate-50/50 dark:bg-slate-800/50">
+                <h3 class="font-bold text-slate-900 dark:text-white flex items-center gap-2">
+                    <span class="material-symbols-outlined text-primary">trending_up</span>
+                    Biểu đồ doanh thu theo tháng
+                </h3>
+                <span class="text-xs text-slate-400 italic">Dữ liệu thực tế</span>
+            </div>
+            <div class="p-6">
+                <canvas id="revenueChart"></canvas>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const ctx = document.getElementById('revenueChart').getContext('2d');
+
+        // Nhận dữ liệu thật từ Django qua filter safe để JS hiểu đó là mảng
+        const realRevenueData = {{ revenue_list|safe }};
+
+        new Chart(ctx, {
+            type: 'bar',
+            data: {
+                labels: ['T1', 'T2', 'T3', 'T4', 'T5', 'T6', 'T7', 'T8', 'T9', 'T10', 'T11', 'T12'],
+                datasets: [{
+                    label: 'Doanh thu thực tế (VND)',
+                    data: realRevenueData,
+                    backgroundColor: '#0ea5e9',
+                    borderRadius: 6,
+                    hoverBackgroundColor: '#0284c7'
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: true,
+                plugins: {
+                    legend: {
+                        position: 'top',
+                        labels: {
+                            color: '#64748b',
+                            font: {
+                                family: 'Inter, system-ui, sans-serif',
+                                weight: '600'
+                            }
+                        }
+                    },
+                    tooltip: {
+                        backgroundColor: '#1e293b',
+                        titleColor: '#f1f5f9',
+                        bodyColor: '#f1f5f9',
+                        padding: 12,
+                        borderColor: '#334155',
+                        borderWidth: 1,
+                        callbacks: {
+                            label: function(context) {
+                                let label = context.dataset.label || '';
+                                if (label) {
+                                    label += ': ';
+                                }
+                                if (context.parsed.y !== null) {
+                                    label += new Intl.NumberFormat('vi-VN', { 
+                                        style: 'currency', 
+                                        currency: 'VND' 
+                                    }).format(context.parsed.y);
+                                }
+                                return label;
+                            }
+                        }
+                    }
+                },
+                scales: {
+                    y: {
+                        beginAtZero: true,
+                        grid: {
+                            color: '#e2e8f0'
+                        },
+                        ticks: {
+                            color: '#64748b',
+                            font: {
+                                family: 'Inter, system-ui, sans-serif'
+                            },
+                            callback: function(value) {
+                                return value.toLocaleString('vi-VN') + ' đ';
+                            }
+                        }
+                    },
+                    x: {
+                        grid: {
+                            display: false
+                        },
+                        ticks: {
+                            color: '#64748b',
+                            font: {
+                                family: 'Inter, system-ui, sans-serif',
+                                weight: '600'
+                            }
+                        }
+                    }
+                }
+            }
+        });
+    });
+</script>
+{% endblock %}

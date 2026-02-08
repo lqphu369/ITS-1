@@ -1,0 +1,153 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Bản đồ thông minh - ITS Rental{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+<link rel="stylesheet" href="https://unpkg.com/leaflet-control-geocoder/dist/Control.Geocoder.css" />
+<link rel="stylesheet" href="https://unpkg.com/leaflet-routing-machine@latest/dist/leaflet-routing-machine.css" />
+
+<link rel="stylesheet" href="{% static 'frontend/css/map_style.css' %}" />
+{% endblock %}
+
+{% block content %}
+<div class="flex flex-col h-[calc(100vh-4rem)]">
+    <div class="flex flex-1 h-full overflow-hidden relative">
+        <aside class="w-full md:w-[400px] bg-white dark:bg-[#111b21] border-r border-gray-200 dark:border-gray-700 flex flex-col sidebar-container h-full shrink-0">
+            <div class="p-5 border-b border-gray-100 dark:border-gray-800 shrink-0">
+                <h2 class="text-lg font-bold mb-4 flex items-center gap-2 text-slate-900 dark:text-white">
+                    <span class="material-symbols-outlined text-primary font-bold">search</span> Tìm xe thực tế
+                </h2>
+                <div class="space-y-4">
+                    <div class="relative">
+                        <span class="material-symbols-outlined absolute left-3 top-3.5 text-gray-400 text-[20px]">location_on</span>
+                        <input class="w-full bg-slate-50 dark:bg-gray-800 border border-slate-200 dark:border-gray-700 rounded-lg pl-10 pr-4 py-3 text-sm focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary text-slate-900 dark:text-white"
+                               placeholder="Nhập địa chỉ + Enter" id="location-search" />
+                    </div>
+                    <div class="flex gap-2 overflow-x-auto pb-2 no-scrollbar">
+                        <button class="px-4 py-1.5 rounded-full bg-primary text-white text-xs font-semibold filter-btn shadow-sm" data-filter="all">Tất cả</button>
+                        <button class="px-4 py-1.5 rounded-full bg-slate-100 dark:bg-gray-800 text-slate-600 dark:text-slate-300 text-xs font-semibold filter-btn" data-filter="Available">Có sẵn</button>
+                        <button class="px-4 py-1.5 rounded-full bg-slate-100 dark:bg-gray-800 text-slate-600 dark:text-slate-300 text-xs font-semibold filter-btn" data-filter="Booked">Đã thuê</button>
+                    </div>
+                </div>
+            </div>
+
+            <div class="flex-1 overflow-y-auto custom-scrollbar p-5 bg-slate-50 dark:bg-[#0b1216]">
+                <p class="text-sm font-semibold text-slate-500 dark:text-slate-400 mb-4" id="vehicle-count">{{ vehicles|length }} xe tìm thấy</p>
+                <div id="vehicle-list" class="space-y-4">
+                    {% for vehicle in vehicles %}
+                    <div class="bg-white dark:bg-[#16222b] rounded-lg p-3 shadow-sm border border-slate-100 dark:border-gray-800 cursor-pointer hover:border-primary transition-all vehicle-card"
+                         onclick="focusVehicle({{ vehicle.latitude|stringformat:'f' }}, {{ vehicle.longitude|stringformat:'f' }})"
+                         data-id="{{ vehicle.id }}">
+                         
+                        <div class="flex gap-4">
+                            <div class="w-28 h-20 bg-gray-100 rounded-md overflow-hidden relative shrink-0">
+                                <img class="w-full h-full object-cover" src="{% if vehicle.image %}{{ vehicle.image.url }}{% else %}{% static 'img/placeholder.jpg' %}{% endif %}" alt="{{ vehicle.name }}" />
+                                
+                                {% if vehicle.status == 'maintenance' %}
+                                    <div class="absolute inset-0 bg-black/60 flex items-center justify-center">
+                                        <span class="text-[10px] text-white font-bold uppercase bg-slate-600 px-2 py-0.5 rounded border border-white/20">Bảo trì</span>
+                                    </div>
+                                {% elif vehicle.status == 'Booked' or vehicle.status == 'in_use' %}
+                                    <div class="absolute inset-0 bg-black/40 flex items-center justify-center">
+                                        <span class="text-[10px] text-white font-bold uppercase bg-red-600 px-2 py-0.5 rounded">Đã thuê</span>
+                                    </div>
+                                {% endif %}
+                                </div>
+                            <div class="flex flex-col flex-1 justify-between">
+                                <div>
+                                    <h3 class="font-bold text-slate-900 dark:text-white leading-tight">{{ vehicle.name }}</h3>
+                                    <p class="text-xs text-slate-500 dark:text-slate-400 mt-1">Vị trí thực • {{ vehicle.get_status_display }}</p>
+                                </div>
+                                <div class="flex justify-between items-end mt-2">
+                                    <p class="text-primary font-bold text-lg">{{ vehicle.price_per_day|floatformat:0 }}đ</p>
+                                    
+                                    <a href="javascript:void(0)" 
+                                       onclick="focusVehicle({{ vehicle.latitude|stringformat:'f' }}, {{ vehicle.longitude|stringformat:'f' }}); event.stopPropagation();" 
+                                       class="bg-primary/10 text-primary hover:bg-primary hover:text-white px-3 py-1.5 rounded-md text-xs font-bold transition-colors">
+                                       Xem
+                                    </a>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+        </aside>
+
+        <main class="flex-1 relative bg-slate-200">
+            <div id="map"></div>
+            <div class="absolute bottom-6 right-6 z-[2100]">
+                <button class="bg-white dark:bg-slate-800 text-primary p-3 rounded-full shadow-2xl hover:scale-110 transition-transform border border-slate-200" id="locate-me-btn">
+                    <span class="material-symbols-outlined">my_location</span>
+                </button>
+            </div>
+        </main>
+    </div>
+</div>
+
+<div id="routeModal" class="modal-overlay">
+    <div class="modal-content">
+        <div class="modal-header"><h3>Chi tiết lộ trình</h3><span class="close-btn" onclick="closeModal()">&times;</span></div>
+        <div class="modal-body"><div id="route-summary" class="summary-box"></div><ul id="route-instructions" class="instruction-list"></ul></div>
+    </div>
+</div>
+
+<div id="locationModal" class="modal-overlay">
+    <div class="modal-content modal-md">
+        <div class="modal-header header-info"><h3>📍 Thông tin địa điểm</h3><span class="close-btn text-white" onclick="closeLocationModal()">&times;</span></div>
+        <div class="modal-body p-20">
+            <h4 id="loc-car-name" class="loc-title font-bold text-xl mb-3 text-primary uppercase">Tên xe...</h4>
+            <div class="space-y-3 text-sm text-slate-600">
+                <p><strong>🏠 Địa chỉ nhận xe:</strong><br><span class="loc-address">123 Nguyễn Văn Linh, P. Tân Phú, Q.7, TP.HCM</span></p>
+                <p><strong>🕐 Giờ hoạt động:</strong> <b>7:00 - 22:00</b></p>
+                <p><strong>📞 Liên hệ:</strong> <a href="tel:0901234567" class="text-primary font-bold">090 123 4567</a></p>
+            </div>
+        </div>
+        <div class="modal-footer flex-end">
+            <button id="btn-view-map" class="btn-cancel !bg-slate-500 flex-1 font-bold">🔍 XEM BẢN ĐỒ</button>
+            <button id="btn-start-route" class="btn-confirm flex-1 font-bold uppercase">↗️ Chỉ đường</button>
+        </div>
+    </div>
+</div>
+
+<div id="termsModal" class="modal-overlay">
+    <div class="modal-content modal-lg">
+        <div class="modal-header header-dark"><h3>📜 ĐIỀU KHOẢN & CHÍNH SÁCH THUÊ XE</h3><span class="close-btn text-white" onclick="closeTermsModal()">&times;</span></div>
+        <div class="modal-body scrollable-body custom-scrollbar">
+            <div class="term-highlight-box border-l-4 border-primary">
+                <div><span class="text-label text-[10px] uppercase font-bold text-slate-400">Đang xem cho:</span><h3 id="term-car-name" class="text-success font-black text-lg">Tên xe...</h3></div>
+                <div class="text-right"><span class="text-label text-[10px] uppercase font-bold text-slate-400">Đơn giá:</span><strong id="term-car-price" class="text-danger text-xl">0đ/ngày</strong></div>
+            </div>
+
+            <div class="policy-content">
+                <h5 class="policy-title">1. GIÁ THUÊ & PHỤ PHÍ CUỐI TUẦN</h5>
+                <ul class="policy-list">
+                    <li>Giá thuê tính theo ngày (24 giờ kể từ khi nhận xe).</li>
+                    <li><strong>Phụ phí:</strong> Áp dụng <b>+20%</b> cho đơn thuê vào Thứ 7 & CN.</li>
+                    <li><strong>Trả xe trễ:</strong> Dưới 1h miễn phí; 1-3h phụ thu 200k; Trên 3h tính 1 ngày.</li>
+                </ul>
+                <h5 class="policy-title">2. NHIÊN LIỆU</h5>
+                <ul class="policy-list"><li>Trả xe với mức nhiên liệu như lúc nhận.</li></ul>
+                <h5 class="policy-title">3. TIỀN CỌC & GIẤY TỜ</h5>
+                <ul class="policy-list"><li>CCCD gắn chip + GPLX bản gốc. Tiền cọc: 3-30 triệu tùy xe.</li></ul>
+                <h5 class="policy-title" style="color: #dc3545">4. CẤM NGHIÊM 🚫</h5>
+                <ul class="policy-list" style="color: #dc3545"><li>Không sử dụng xe vào mục đích phi pháp hoặc đua xe.</li></ul>
+            </div>
+        </div>
+        <div class="modal-footer"><button class="btn-cancel !bg-slate-900 w-full font-bold py-3" onclick="closeTermsModal()">ĐÃ HIỂU & ĐỒNG Ý</button></div>
+    </div>
+</div>
+
+{{ vehicles_json|json_script:"vehicles-data" }}
+{% endblock %}
+
+{% block extra_js %}
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<script src="https://unpkg.com/leaflet-control-geocoder/dist/Control.Geocoder.js"></script>
+<script src="https://unpkg.com/leaflet-routing-machine@latest/dist/leaflet-routing-machine.js"></script>
+
+<script src="{% static 'frontend/js/map_logic.js' %}"></script>
+{% endblock %}

@@ -1,0 +1,265 @@
+body {
+    margin: 0;
+    padding: 0;
+}
+
+/* Cấu hình bản đồ làm lớp nền - Position Absolute để full màn hình */
+#map {
+    height: 100%;
+    width: 100%;
+    position: absolute; /* Quan trọng: Absolute để đè lên background */
+    top: 0;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    z-index: 10 !important; /* Lớp nền thấp nhất */
+    cursor: crosshair;
+}
+
+/* Đảm bảo Sidebar và các nút điều khiển luôn nằm trên Map */
+.sidebar-container,
+#locate-me-btn,
+.filter-btn {
+    pointer-events: auto !important;
+    position: relative;
+    z-index: 2000 !important; 
+}
+
+/* Popup bên trong bản đồ Leaflet */
+.popup-btn {
+    cursor: pointer;
+    padding: 5px 10px;
+    color: white;
+    border: none;
+    border-radius: 3px;
+    margin-top: 5px;
+}
+
+/* ==========================================================================
+   2. CUSTOM SCROLLBAR (Thanh cuộn đẹp)
+   ========================================================================== */
+.custom-scrollbar::-webkit-scrollbar {
+    width: 6px;
+}
+
+.custom-scrollbar::-webkit-scrollbar-thumb {
+    background-color: #cbd5e1;
+    border-radius: 20px;
+}
+
+.no-scrollbar::-webkit-scrollbar {
+    display: none;
+}
+
+/* ==========================================================================
+   3. MODAL SYSTEM CORE (Hệ thống Modal)
+   ========================================================================== */
+.modal-overlay {
+    display: none;
+    position: fixed !important;
+    z-index: 99999 !important; /* Cao nhất tuyệt đối: Che cả Sidebar */
+    left: 0;
+    top: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(15, 23, 42, 0.8); /* Màu nền tối hiện đại (Dark slate) */
+    backdrop-filter: blur(4px); /* Hiệu ứng mờ nền */
+    justify-content: center;
+    align-items: center;
+}
+
+.modal-content {
+    background-color: #fff;
+    margin: 0 20px;
+    width: 90%;
+    max-width: 500px;
+    border-radius: 12px;
+    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
+    overflow: hidden;
+    animation: slideDown 0.3s ease-out;
+    display: flex;
+    flex-direction: column;
+}
+
+@keyframes slideDown {
+    from {
+        transform: translateY(-50px);
+        opacity: 0;
+    }
+    to {
+        transform: translateY(0);
+        opacity: 1;
+    }
+}
+
+.modal-header {
+    background: #007bff;
+    color: white;
+    padding: 15px 20px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.modal-header h3 {
+    margin: 0;
+    font-size: 18px;
+}
+
+/* Các biến thể màu Header */
+.header-dark { background: #2c3e50; color: white; }
+.header-info { background: #17a2b8; color: white; }
+
+.close-btn {
+    font-size: 28px;
+    font-weight: bold;
+    cursor: pointer;
+}
+
+.modal-body {
+    padding: 20px;
+    max-height: 60vh;
+    overflow-y: auto;
+}
+
+.modal-footer {
+    padding: 15px 20px;
+    background: #f1f1f1;
+    text-align: right;
+}
+
+/* ==========================================================================
+   4. MODAL CONTENTS (Nội dung bên trong Modal)
+   ========================================================================== */
+
+/* --- A. Route & Instructions (Chỉ đường) --- */
+.summary-box {
+    background: #f8f9fa;
+    border-left: 5px solid #28a745;
+    padding: 15px;
+    margin-bottom: 20px;
+    border-radius: 4px;
+    font-size: 16px;
+    line-height: 1.5;
+}
+
+.instruction-list {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+}
+
+.instruction-list li {
+    padding: 10px 0;
+    border-bottom: 1px solid #eee;
+    display: flex;
+    align-items: center;
+}
+
+.instruction-list li:last-child {
+    border-bottom: none;
+}
+
+.instruction-icon {
+    margin-right: 10px;
+    font-size: 20px;
+    color: #666;
+}
+
+/* --- B. Location Specifics (Chi tiết vị trí) --- */
+.loc-title {
+    margin-top: 0;
+    color: #17a2b8;
+    border-bottom: 1px solid #eee;
+    padding-bottom: 10px;
+}
+
+.loc-address {
+    color: #555;
+    display: block;
+    margin-top: 5px;
+    background: #f8f9fa;
+    padding: 8px;
+    border-radius: 4px;
+    border-left: 3px solid #17a2b8;
+}
+
+/* --- C. Terms & Policy (Điều khoản Hợp đồng) --- */
+.scrollable-body {
+    font-size: 14px;
+    line-height: 1.6;
+    max-height: 50vh;
+    overflow-y: auto;
+    padding-right: 10px;
+}
+
+.term-highlight-box {
+    background: #e8f5e9;
+    padding: 15px;
+    border-radius: 8px;
+    margin-bottom: 20px;
+    border-left: 5px solid #28a745;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.policy-title {
+    font-weight: 800;
+    color: #1e293b;
+    margin-top: 15px;
+    text-transform: uppercase;
+    font-size: 13px;
+}
+
+.policy-list {
+    padding-left: 1.5rem;
+    list-style-type: disc;
+    margin-bottom: 10px;
+}
+
+.policy-list li {
+    margin-bottom: 4px;
+    font-size: 13.5px;
+}
+
+/* ==========================================================================
+   5. UI UTILITIES & BUTTONS
+   ========================================================================== */
+.modal-lg { max-width: 700px; }
+.modal-md { max-width: 450px; }
+
+.text-white { color: white; }
+.bg-dark { background: #2c3e50 !important; }
+
+.text-label { display: block; font-size: 12px; color: #666; }
+.text-success { color: #28a745; font-size: 20px; margin: 0; }
+.text-danger { color: #d63031; font-size: 20px; }
+.text-right { text-align: right; }
+
+.p-20 { padding: 20px; }
+.mt-15 { margin-top: 15px; }
+
+.flex-end { display: flex; gap: 10px; justify-content: flex-end; }
+.flex-1 { flex: 1; margin: 0; }
+
+/* Buttons */
+.btn-confirm {
+    background: #28a745;
+    color: white;
+    border: none;
+    padding: 10px 20px;
+    border-radius: 5px;
+    cursor: pointer;
+    font-weight: bold;
+}
+
+.btn-cancel {
+    background: #dc3545;
+    color: white;
+    border: none;
+    padding: 10px 20px;
+    border-radius: 5px;
+    cursor: pointer;
+    margin-right: 10px;
+}

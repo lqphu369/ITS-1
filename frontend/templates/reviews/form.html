@@ -1,0 +1,78 @@
+﻿{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Đánh giá chuyến đi - ITS Rental{% endblock %}
+
+{% block extra_css %}
+<style>
+    .star-rating:not(:checked) > input {
+        position: absolute;
+        appearance: none;
+    }
+
+    .star-rating:not(:checked) > label {
+        float: right;
+        cursor: pointer;
+        color: #cbd5e1;
+    }
+
+        .star-rating:not(:checked) > label:before {
+            content: '★';
+            font-size: 2.5rem;
+        }
+
+    .star-rating > input:checked ~ label {
+        color: #fbbf24;
+    }
+    /* Amber-400 */
+    .star-rating:not(:checked) > label:hover,
+    .star-rating:not(:checked) > label:hover ~ label {
+        color: #fcd34d;
+    }
+    /* Amber-300 */
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="max-w-2xl mx-auto px-4 py-12">
+    <div class="bg-white dark:bg-slate-800 rounded-2xl shadow-lg border border-slate-200 dark:border-slate-700 overflow-hidden">
+
+        <div class="bg-primary/5 p-6 border-b border-slate-200 dark:border-slate-700 text-center">
+            <h1 class="text-2xl font-bold text-slate-900 dark:text-white">Đánh giá chuyến đi</h1>
+            <p class="text-slate-500 dark:text-slate-400 mt-1">Xe: {{ booking.vehicle.name }}</p>
+        </div>
+
+        <form method="POST" class="p-8 space-y-6">
+            {% csrf_token %}
+
+            <div class="flex flex-col items-center">
+                <label class="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">Trải nghiệm của bạn thế nào?</label>
+
+                <div class="star-rating flex flex-row-reverse justify-center gap-1">
+                    <input type="radio" id="star5" name="rating" value="5" required /><label for="star5" title="Tuyệt vời"></label>
+                    <input type="radio" id="star4" name="rating" value="4" /><label for="star4" title="Tốt"></label>
+                    <input type="radio" id="star3" name="rating" value="3" /><label for="star3" title="Bình thường"></label>
+                    <input type="radio" id="star2" name="rating" value="2" /><label for="star2" title="Tệ"></label>
+                    <input type="radio" id="star1" name="rating" value="1" /><label for="star1" title="Rất tệ"></label>
+                </div>
+            </div>
+
+            <div>
+                <label for="comment" class="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">Nhận xét chi tiết</label>
+                <textarea id="comment" name="comment" rows="4"
+                          class="w-full px-4 py-3 rounded-lg border border-slate-300 dark:border-slate-600 dark:bg-slate-900 dark:text-white focus:ring-primary focus:border-primary placeholder-slate-400"
+                          placeholder="Chia sẻ thêm về tình trạng xe, dịch vụ..."></textarea>
+            </div>
+
+            <div class="flex gap-4 pt-2">
+                <a href="{% url 'frontend:order_list' %}" class="flex-1 py-3 px-4 border border-slate-300 dark:border-slate-600 rounded-lg text-center font-bold text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-700 transition">
+                    Bỏ qua
+                </a>
+                <button type="submit" class="flex-1 py-3 px-4 bg-primary text-white rounded-lg font-bold hover:bg-sky-600 shadow-md transition">
+                    Gửi đánh giá
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %}

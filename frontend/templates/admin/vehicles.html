@@ -1,0 +1,165 @@
+﻿{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Quản lý Xe - ITS Rental{% endblock %}
+
+{% block header %}
+<header class="w-full bg-slate-900 text-white border-b border-slate-800 px-10 py-4 flex justify-between items-center sticky top-0 z-50">
+    <div class="flex items-center gap-3">
+        <span class="material-symbols-outlined text-primary text-3xl">admin_panel_settings</span>
+        <h2 class="font-black text-xl tracking-tight uppercase">ITS Admin Panel</h2>
+    </div>
+    <div class="flex items-center gap-6">
+        <div class="text-right leading-none">
+            <p class="text-sm font-bold">{{ user.username }}</p>
+            <span class="text-[10px] text-primary font-black uppercase">Hệ thống quản trị</span>
+        </div>
+        <a href="{% url 'frontend:logout' %}" class="bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded-lg text-sm font-bold transition-all">
+            Thoát hệ thống
+        </a>
+    </div>
+</header>
+{% endblock %}
+
+{% block content %}
+{% csrf_token %}
+
+<div class="flex min-h-[calc(100vh-68px)]">
+    <aside class="w-64 hidden lg:block bg-white dark:bg-slate-800 border-r border-slate-200 dark:border-slate-700 p-4">
+        <nav class="space-y-1">
+            <a href="{% url 'frontend:admin_dashboard' %}" class="flex items-center gap-3 px-3 py-2.5 text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-700 rounded-lg font-medium transition-all">
+                <span class="material-symbols-outlined">dashboard</span> Dashboard
+            </a>
+
+            <a href="{% url 'frontend:admin_vehicles' %}" class="flex items-center gap-3 px-3 py-2.5 bg-primary/10 text-primary rounded-lg font-medium transition-all">
+                <span class="material-symbols-outlined">directions_car</span> Quản lý Xe
+            </a>
+
+            <a href="{% url 'frontend:admin_bookings' %}" class="flex items-center gap-3 px-3 py-2.5 text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-700 rounded-lg font-medium transition-all">
+                <span class="material-symbols-outlined">calendar_month</span> Đặt chỗ
+            </a>
+
+            <a href="{% url 'frontend:admin_stats' %}" class="flex items-center gap-3 px-3 py-2.5 text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-700 rounded-lg font-medium transition-all">
+                <span class="material-symbols-outlined">bar_chart</span> Thống kê
+            </a>
+        </nav>
+    </aside>
+
+    <div class="flex-1 p-6 lg:p-10 bg-slate-50 dark:bg-slate-900 transition-colors duration-300">
+        <div class="flex justify-between items-center mb-8">
+            <h1 class="text-2xl font-black text-slate-900 dark:text-white tracking-tight">Quản lý danh sách Xe</h1>
+            <a href="{% url 'frontend:admin_vehicle_add' %}" class="bg-primary hover:bg-sky-600 text-white px-5 py-2.5 rounded-lg text-sm font-bold shadow-sm transition-all flex items-center gap-2">
+                <span class="material-symbols-outlined text-[20px]">add</span>
+                Thêm xe mới
+            </a>
+        </div>
+
+        <div class="bg-white dark:bg-slate-800 rounded-xl shadow-sm border border-slate-200 dark:border-slate-700 overflow-hidden">
+            <div class="overflow-x-auto">
+                <table class="w-full text-left text-sm">
+                    <thead class="bg-slate-50 dark:bg-slate-900/50 text-slate-500 dark:text-slate-400">
+                        <tr>
+                            <th class="px-6 py-4 font-semibold">ID</th>
+                            <th class="px-6 py-4 font-semibold">THÔNG TIN XE</th>
+                            <th class="px-6 py-4 font-semibold">BIỂN SỐ</th>
+                            <th class="px-6 py-4 font-semibold">TRẠNG THÁI</th>
+                            <th class="px-6 py-4 font-semibold text-center">HÀNH ĐỘNG</th>
+                        </tr>
+                    </thead>
+                    <tbody class="divide-y divide-slate-200 dark:divide-slate-700">
+                        {% for vehicle in vehicles %}
+                        <tr class="hover:bg-slate-50 dark:hover:bg-slate-700/50 transition-colors duration-300">
+                            <td class="px-6 py-4 text-slate-500 font-medium">#{{ vehicle.id }}</td>
+                            <td class="px-6 py-4">
+                                <div class="font-bold text-slate-900 dark:text-white">{{ vehicle.name }}</div>
+                                <div class="text-xs text-slate-400">{{ vehicle.get_vehicle_type_display|default:"Phương tiện" }}</div>
+                            </td>
+                            <td class="px-6 py-4">
+                                <code class="bg-slate-100 dark:bg-slate-700 px-2 py-1 rounded text-slate-700 dark:text-slate-300 text-xs font-bold">{{ vehicle.license_plate }}</code>
+                            </td>
+                            <td class="px-6 py-4">
+                                <span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-bold
+                                    {% if vehicle.status|lower == 'available' %}bg-green-100 text-green-700
+                                    {% elif vehicle.status|lower == 'booked' %}bg-yellow-100 text-yellow-700
+                                    {% else %}bg-red-100 text-red-700{% endif %}">
+                                    {{ vehicle.get_status_display }}
+                                </span>
+                            </td>
+                            <td class="px-6 py-4">
+                                <div class="flex items-center justify-center gap-4">
+                                    {% if vehicle.status|upper != 'AVAILABLE' %}
+                                    <a href="{% url 'frontend:admin_release_vehicle' vehicle.id %}"
+                                       class="text-sky-600 hover:text-sky-700 transition-colors font-bold text-xs flex items-center gap-1"
+                                       onclick="return confirm('Mở trạng thái cho xe này?')">
+                                        <span class="material-symbols-outlined text-[18px]">lock_open</span> Mở
+                                    </a>
+                                    {% endif %}
+
+                                    <a href="{% url 'frontend:admin_vehicle_edit' vehicle.id %}" class="text-slate-400 hover:text-primary transition-colors" title="Sửa">
+                                        <span class="material-symbols-outlined text-[20px]">edit</span>
+                                    </a>
+
+                                    <button type="button"
+                                            class="delete-vehicle-btn text-slate-400 hover:text-red-600 transition-colors"
+                                            data-id="{{ vehicle.id }}"
+                                            data-name="{{ vehicle.name }}"
+                                            title="Xóa">
+                                        <span class="material-symbols-outlined text-[20px]">delete</span>
+                                    </button>
+                                </div>
+                            </td>
+                        </tr>
+                        {% empty %}
+                        <tr>
+                            <td colspan="5" class="p-10 text-center text-slate-400">
+                                <span class="material-symbols-outlined text-4xl block mb-2">directions_car_off</span>
+                                Chưa có phương tiện nào trong hệ thống.
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    document.querySelectorAll('.delete-vehicle-btn').forEach(button => {
+        button.addEventListener('click', function () {
+            const vehicleId = this.dataset.id;
+            const vehicleName = this.dataset.name;
+            const row = this.closest('tr');
+
+            if (confirm(`Bạn có chắc chắn muốn xóa xe "${vehicleName}" không?`)) {
+                // Lấy token bảo mật từ input ẩn do Django sinh ra
+                const csrfToken = document.querySelector('[name=csrfmiddlewaretoken]').value;
+
+                fetch(`/dashboard/vehicles/delete/${vehicleId}/`, {
+                    method: 'POST',
+                    headers: {
+                        'X-CSRFToken': csrfToken,
+                        'Content-Type': 'application/json'
+                    }
+                })
+                    .then(response => response.json())
+                    .then(data => {
+                        if (data.status === 'success') {
+                            // Hiệu ứng xóa dòng trực quan
+                            row.style.transition = 'all 0.5s ease';
+                            row.style.opacity = '0';
+                            row.style.transform = 'translateX(20px)';
+                            setTimeout(() => row.remove(), 500);
+                        } else {
+                            alert('Lỗi: ' + data.message);
+                        }
+                    })
+                    .catch(error => {
+                        console.error('Error:', error);
+                        alert('Có lỗi xảy ra khi gửi yêu cầu xóa.');
+                    });
+            }
+        });
+    });
+</script>
+{% endblock %}

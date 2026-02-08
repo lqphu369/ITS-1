@@ -1,0 +1,45 @@
+﻿{% extends 'base.html' %}
+
+{% block title %}Bảng điều khiển Admin - ITS Rental{% endblock %}
+
+{% block header %}
+<header class="w-full bg-slate-900 text-white border-b border-slate-800 px-10 py-4 flex justify-between items-center sticky top-0 z-50">
+    <div class="flex items-center gap-3">
+        <span class="material-symbols-outlined text-primary text-3xl">admin_panel_settings</span>
+        <h2 class="font-black text-xl tracking-tight uppercase">ITS Admin Control</h2>
+    </div>
+    <div class="flex items-center gap-6">
+        <span class="text-sm font-medium text-slate-400 italic">Chào Admin, {{ user.username }}</span>
+        <a href="{% url 'frontend:logout' %}" class="bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded-lg text-sm font-bold transition-all">
+            Thoát hệ thống
+        </a>
+    </div>
+</header>
+{% endblock %}
+
+{% block content %}
+<div class="admin-wrapper flex min-h-[calc(100vh-68px)]">
+    <aside class="admin-sidebar w-64 bg-white border-r border-slate-200 p-6">
+        <nav class="space-y-2">
+            <a href="{% url 'frontend:admin_dashboard' %}" class="flex items-center gap-3 p-3 bg-primary/10 text-primary rounded-xl font-bold">
+                <span class="material-symbols-outlined">dashboard</span> Tổng quan
+            </a>
+            <a href="{% url 'frontend:admin_vehicles' %}" class="flex items-center gap-3 p-3 text-slate-600 hover:bg-slate-50 rounded-xl font-medium transition-all">
+                <span class="material-symbols-outlined">directions_car</span> Quản lý Xe
+            </a>
+        </nav>
+    </aside>
+
+    <main class="flex-grow bg-slate-50 p-10">
+        <h1 class="text-3xl font-black text-slate-900 mb-8 tracking-tight">Tổng quan hệ thống</h1>
+
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-10">
+            {% include 'admin/includes/_stats_cards.html' %}
+        </div>
+
+        <div class="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden">
+            {% include 'admin/includes/_recent_activities.html' %}
+        </div>
+    </main>
+</div>
+{% endblock %}

@@ -1,0 +1,149 @@
+﻿{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Admin Dashboard - ITS Rental{% endblock %}
+
+{% block header %}
+<header class="w-full bg-slate-900 text-white border-b border-slate-800 px-10 py-4 flex justify-between items-center sticky top-0 z-50">
+    <div class="flex items-center gap-3">
+        <span class="material-symbols-outlined text-primary text-3xl">admin_panel_settings</span>
+        <h2 class="font-black text-xl tracking-tight uppercase">ITS Admin Panel</h2>
+    </div>
+    <div class="flex items-center gap-6">
+        <div class="text-right leading-none">
+            <p class="text-sm font-bold">{{ user.username }}</p>
+            <span class="text-[10px] text-primary font-black uppercase">Hệ thống quản trị</span>
+        </div>
+        <a href="{% url 'frontend:logout' %}" class="bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded-lg text-sm font-bold transition-all">
+            Thoát hệ thống
+        </a>
+    </div>
+</header>
+{% endblock %}
+
+{% block content %}
+<div class="flex min-h-[calc(100vh-68px)]">
+    <aside class="w-64 hidden lg:block bg-white dark:bg-slate-800 border-r border-slate-200 dark:border-slate-700 p-4">
+        <nav class="space-y-1">
+            <a href="{% url 'frontend:admin_dashboard' %}" class="flex items-center gap-3 px-3 py-2.5 bg-primary/10 text-primary rounded-lg font-medium transition-all">
+                <span class="material-symbols-outlined">dashboard</span> Dashboard
+            </a>
+
+            <a href="{% url 'frontend:admin_vehicles' %}" class="flex items-center gap-3 px-3 py-2.5 text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-700 rounded-lg font-medium transition-all">
+                <span class="material-symbols-outlined">directions_car</span> Quản lý Xe
+            </a>
+
+            <a href="{% url 'frontend:admin_bookings' %}" class="flex items-center gap-3 px-3 py-2.5 text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-700 rounded-lg font-medium transition-all">
+                <span class="material-symbols-outlined">calendar_month</span> Đặt chỗ
+            </a>
+
+            <a href="{% url 'frontend:admin_stats' %}" class="flex items-center gap-3 px-3 py-2.5 text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-700 rounded-lg font-medium transition-all">
+                <span class="material-symbols-outlined">bar_chart</span> Thống kê
+            </a>
+        </nav>
+    </aside>
+
+    <div class="flex-1 p-6 lg:p-10 bg-slate-50 dark:bg-slate-900 transition-colors duration-300">
+        <h1 class="text-2xl font-black text-slate-900 dark:text-white mb-8 tracking-tight">Tổng quan hệ thống</h1>
+
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+            <div class="bg-white dark:bg-slate-800 p-6 rounded-xl shadow-sm border border-slate-200 dark:border-slate-700 flex items-center justify-between hover:shadow-md transition-shadow">
+                <div>
+                    <p class="text-sm font-medium text-slate-500 dark:text-slate-400">Tổng doanh thu</p>
+                    <p class="text-2xl font-bold text-slate-900 dark:text-white mt-1">{{ total_revenue|floatformat:0 }}đ</p>
+                </div>
+                <div class="p-3 bg-green-100 dark:bg-green-900/30 text-green-600 rounded-lg">
+                    <span class="material-symbols-outlined">payments</span>
+                </div>
+            </div>
+
+            <div class="bg-white dark:bg-slate-800 p-6 rounded-xl shadow-sm border border-slate-200 dark:border-slate-700 flex items-center justify-between hover:shadow-md transition-shadow">
+                <div>
+                    <p class="text-sm font-medium text-slate-500 dark:text-slate-400">Đơn hàng mới</p>
+                    <p class="text-2xl font-bold text-slate-900 dark:text-white mt-1">{{ new_bookings_count }}</p>
+                </div>
+                <div class="p-3 bg-blue-100 dark:bg-blue-900/30 text-blue-600 rounded-lg">
+                    <span class="material-symbols-outlined">shopping_cart</span>
+                </div>
+            </div>
+
+            <div class="bg-white dark:bg-slate-800 p-6 rounded-xl shadow-sm border border-slate-200 dark:border-slate-700 flex items-center justify-between hover:shadow-md transition-shadow">
+                <div>
+                    <p class="text-sm font-medium text-slate-500 dark:text-slate-400">Xe đang chạy</p>
+                    <p class="text-2xl font-bold text-slate-900 dark:text-white mt-1">{{ active_vehicles_count }}</p>
+                </div>
+                <div class="p-3 bg-orange-100 dark:bg-orange-900/30 text-orange-600 rounded-lg">
+                    <span class="material-symbols-outlined">commute</span>
+                </div>
+            </div>
+        </div>
+
+        <div class="bg-white dark:bg-slate-800 rounded-xl shadow-sm border border-slate-200 dark:border-slate-700 overflow-hidden">
+            <div class="p-6 border-b border-slate-200 dark:border-slate-700 flex justify-between items-center bg-slate-50/50 dark:bg-slate-800/50">
+                <h3 class="font-bold text-slate-900 dark:text-white flex items-center gap-2">
+                    <span class="material-symbols-outlined text-primary">history</span>
+                    Hoạt động gần đây
+                </h3>
+                <span class="text-xs text-slate-400 italic">Cập nhật theo thời gian thực</span>
+            </div>
+
+            <div class="overflow-x-auto">
+                <table class="w-full text-left text-sm">
+                    <thead class="bg-slate-50 dark:bg-slate-900/50 text-slate-500 dark:text-slate-400">
+                        <tr>
+                            <th class="px-6 py-4 font-semibold">Khách hàng</th>
+                            <th class="px-6 py-4 font-semibold">Xe</th>
+                            <th class="px-6 py-4 font-semibold">Trạng thái</th>
+                            <th class="px-6 py-4 font-semibold">Thời gian</th>
+                            <th class="px-6 py-4 font-semibold text-right">Hành động</th>
+                        </tr>
+                    </thead>
+                    <tbody class="divide-y divide-slate-200 dark:divide-slate-700">
+                        {% for activity in recent_activities %}
+                        <tr class="hover:bg-slate-50 dark:hover:bg-slate-700/50 transition-colors">
+                            <td class="px-6 py-4 font-medium text-slate-900 dark:text-white">
+                                {{ activity.customer.username }}
+                            </td>
+                            <td class="px-6 py-4 text-slate-600 dark:text-slate-300">
+                                {{ activity.vehicle.name }}
+                                <span class="text-xs text-slate-400">({{ activity.vehicle.license_plate }})</span>
+                            </td>
+                            <td class="px-6 py-4">
+                                <span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-bold
+                                    {% if activity.status == 'approved' %}bg-blue-100 text-blue-700
+                                    {% elif activity.status == 'completed' %}bg-green-100 text-green-700
+                                    {% elif activity.status == 'pending' %}bg-orange-100 text-orange-700
+                                    {% else %}bg-red-100 text-red-700{% endif %}">
+                                    {{ activity.get_status_display }}
+                                </span>
+                            </td>
+                            <td class="px-6 py-4 text-slate-500">
+                                {{ activity.created_at|timesince }} trước
+                            </td>
+                            <td class="px-6 py-4 text-right">
+                                {% if activity.status == 'pending' %}
+                                <a href="{% url 'frontend:approve_order' activity.id %}"
+                                   class="inline-flex items-center gap-1 px-3 py-1 bg-green-500 text-white rounded-md text-xs font-bold hover:bg-green-600 transition shadow-sm shadow-green-200">
+                                    <span class="material-symbols-outlined text-[16px]">check_circle</span>
+                                    Phê duyệt
+                                </a>
+                                {% else %}
+                                <span class="text-slate-300 dark:text-slate-600 material-symbols-outlined text-sm">verified</span>
+                                {% endif %}
+                            </td>
+                        </tr>
+                        {% empty %}
+                        <tr>
+                            <td colspan="5" class="p-10 text-center text-slate-400">
+                                <span class="material-symbols-outlined text-4xl block mb-2">inventory_2</span>
+                                Chưa có hoạt động thuê xe nào được ghi nhận.
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

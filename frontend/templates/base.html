@@ -1,0 +1,196 @@
+﻿{% load static %}
+<!DOCTYPE html>
+<html lang="vi" class="light">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}ITS Vehicle Rental{% endblock %}</title>
+
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;900&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet">
+
+    <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+
+    <script>
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    colors: {
+                        "primary": "#279ae7",
+                        "background-light": "#f6f7f8",
+                        "background-dark": "#111b21",
+                    },
+                    fontFamily: { "display": ["Inter", "sans-serif"] },
+                    borderRadius: { "DEFAULT": "0.25rem", "lg": "0.5rem", "xl": "0.75rem", "full": "9999px" },
+                },
+            },
+        }
+    </script>
+
+    <style>
+        /* CORE & LAYOUT STYLES */
+        body {
+            font-family: 'Inter', sans-serif;
+            margin: 0;
+            padding: 0;
+        }
+
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+        }
+
+        header {
+            z-index: 5000 !important;
+        }
+
+        #map {
+            z-index: 1 !important;
+            position: relative;
+        }
+
+        .sidebar-container,
+        .modal-overlay,
+        #locate-me-btn,
+        .filter-btn,
+        #location-search {
+            position: relative;
+            z-index: 2000 !important;
+            pointer-events: auto !important;
+        }
+
+        /* Modal Styles */
+        .modal-overlay {
+            display: none;
+            position: fixed;
+            z-index: 9999 !important;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0,0,0,0.5);
+            backdrop-filter: blur(2px);
+        }
+
+        .modal-content {
+            background-color: #fff;
+            margin: 5% auto;
+            width: 90%;
+            max-width: 500px;
+            border-radius: 12px;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.3);
+            overflow: hidden;
+            animation: slideDown 0.3s ease-out;
+        }
+
+        @keyframes slideDown {
+            from {
+                transform: translateY(-50px);
+                opacity: 0;
+            }
+
+            to {
+                transform: translateY(0);
+                opacity: 1;
+            }
+        }
+
+        .modal-header {
+            background: #007bff;
+            color: white;
+            padding: 15px 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .modal-body {
+            padding: 20px;
+            max-height: 60vh;
+            overflow-y: auto;
+        }
+
+        .summary-box {
+            background: #f8f9fa;
+            border-left: 5px solid #28a745;
+            padding: 15px;
+            margin-bottom: 20px;
+            border-radius: 4px;
+            font-size: 16px;
+        }
+
+        .btn-confirm {
+            background: #28a745;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-weight: bold;
+        }
+    </style>
+
+    {% block extra_css %}{% endblock %}
+</head>
+<body class="min-h-screen flex flex-col bg-slate-50 dark:bg-background-dark text-slate-900 dark:text-white font-display">
+
+    <header class="w-full bg-white dark:bg-slate-900 border-b border-slate-200 dark:border-slate-800 sticky top-0">
+        <div class="max-w-[1200px] mx-auto px-4 h-16 flex items-center justify-between">
+
+            <a href="{% if user.is_staff %}{% url 'frontend:admin_dashboard' %}{% else %}{% url 'frontend:home' %}{% endif %}"
+               class="flex items-center gap-2 no-underline hover:opacity-80 transition-all group">
+                <span class="text-primary material-symbols-outlined text-3xl group-hover:scale-110 transition-transform">directions_car</span>
+                <span class="text-slate-900 dark:text-white font-black text-xl tracking-tight">ITS Rental</span>
+            </a>
+
+            <nav class="hidden md:flex items-center gap-8 font-semibold text-sm">
+                {% if user.is_authenticated %}
+                {% if user.is_staff %}
+                <span class="text-primary font-bold flex items-center gap-2">
+                    <span class="material-symbols-outlined text-lg">shield_person</span>
+                    Hệ thống Quản trị ITS
+                </span>
+                {% else %}
+                <a href="{% url 'frontend:home' %}" class="hover:text-primary transition-colors">Trang chủ</a>
+                <a href="{% url 'frontend:vehicle_list' %}" class="hover:text-primary transition-colors">Thuê xe</a>
+                <a href="{% url 'frontend:map' %}" class="hover:text-primary transition-colors">Bản đồ</a>
+                <a href="{% url 'frontend:order_list' %}" class="hover:text-primary transition-colors">Đơn của tôi</a>
+                {% endif %}
+                {% endif %}
+            </nav>
+
+            <div class="flex items-center gap-3 border-l border-slate-200 dark:border-slate-700 pl-4">
+                {% if user.is_authenticated %}
+                <div class="text-right leading-none">
+                    <p class="text-sm font-bold">{{ user.username }}</p>
+                    {% if user.is_staff %}<span class="text-[10px] text-primary font-black uppercase">Admin</span>{% endif %}
+                </div>
+                <a href="{% url 'frontend:logout' %}" class="text-red-500 hover:text-red-600 text-xs font-bold uppercase transition-colors">Đăng xuất</a>
+                {% else %}
+                <a href="{% url 'frontend:login' %}" class="text-slate-600 text-sm font-bold hover:text-primary transition-colors">Đăng nhập</a>
+                <a href="{% url 'frontend:register' %}" class="bg-primary text-white px-4 py-2 rounded-lg text-sm font-bold hover:bg-sky-600 shadow-sm shadow-primary/20 transition-all">Đăng ký</a>
+                {% endif %}
+            </div>
+        </div>
+    </header>
+
+    {% include 'includes/_messages.html' %}
+
+    <main class="flex-grow">
+        {% block content %}{% endblock %}
+    </main>
+
+    <footer class="w-full bg-white dark:bg-slate-900 border-t border-slate-100 py-3 mt-auto">
+        <div class="max-w-[1200px] mx-auto px-4 flex justify-center items-center">
+            <p class="text-slate-400 text-[11px] font-medium tracking-wide">
+                © 2026 <span class="text-primary/70 font-bold">ITS Rental</span>. All rights reserved.
+            </p>
+        </div>
+    </footer>
+
+    {% block extra_js %}{% endblock %}
+    <script src="{% static 'frontend/js/main.js' %}"></script>
+</body>
+</html>

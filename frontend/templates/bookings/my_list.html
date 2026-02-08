@@ -1,0 +1,108 @@
+﻿{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Đơn đặt xe của tôi - ITS Rental{% endblock %}
+
+{% block content %}
+<main class="flex-1 flex flex-col items-center w-full px-4 md:px-10 lg:px-40 py-8">
+    <div class="w-full max-w-[960px] flex flex-col gap-8">
+
+        <div class="flex flex-col gap-2">
+            <h1 class="text-4xl font-black text-slate-900 dark:text-white">Đơn đặt xe của tôi</h1>
+            <p class="text-slate-500 dark:text-slate-400">Quản lý các đơn thuê xe hiện tại và lịch sử thuê xe của bạn</p>
+        </div>
+
+        <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
+            <div class="flex flex-col gap-2 rounded-xl p-6 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 shadow-sm">
+                <p class="text-slate-500 text-sm font-medium">Đang thuê</p>
+                <p class="text-3xl font-bold text-slate-900 dark:text-white">{{ active_count|default:0 }}</p>
+            </div>
+            <div class="flex flex-col gap-2 rounded-xl p-6 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 shadow-sm">
+                <p class="text-slate-500 text-sm font-medium">Hoàn thành</p>
+                <p class="text-3xl font-bold text-slate-900 dark:text-white">{{ completed_count|default:0 }}</p>
+            </div>
+            <div class="flex flex-col gap-2 rounded-xl p-6 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 shadow-sm">
+                <p class="text-slate-500 text-sm font-medium">Chờ duyệt</p>
+                <p class="text-3xl font-bold text-slate-900 dark:text-white">{{ pending_count|default:0 }}</p>
+            </div>
+        </div>
+
+        <form method="GET" action="{% url 'frontend:order_list' %}" class="bg-white dark:bg-slate-800 rounded-xl border border-slate-200 p-4 flex flex-col sm:flex-row gap-4 justify-between items-center">
+            <div class="flex-1 w-full border rounded-lg overflow-hidden flex items-center">
+                <span class="material-symbols-outlined px-3 text-slate-400">search</span>
+                <input name="q" value="{{ request.GET.q|default:'' }}" class="w-full bg-transparent border-none focus:ring-0 p-2 text-slate-900 dark:text-white" placeholder="Tìm kiếm...">
+            </div>
+            <div class="sm:w-64 w-full relative">
+                <select name="status" onchange="this.form.submit()"
+                        class="appearance-none flex w-full flex-1 bg-transparent text-slate-900 dark:text-white border-none focus:ring-0 px-4 pl-12 pr-10 text-base cursor-pointer font-medium">
+                    <option value="all" {% if not request.GET.status or request.GET.status == "all" %}selected{% endif %}>Tất cả trạng thái</option>
+                    <option value="pending" {% if request.GET.status == "pending" %}selected{% endif %}>Chờ duyệt (Đã đặt)</option>
+                    <option value="approved" {% if request.GET.status == "approved" %}selected{% endif %}>Đang thuê</option>
+                    <option value="completed" {% if request.GET.status == "completed" %}selected{% endif %}>Hoàn thành</option>
+                    <option value="cancelled" {% if request.GET.status == "cancelled" %}selected{% endif %}>Đã hủy</option>
+                </select>
+            </div>
+        </form>
+
+        <div class="bg-white dark:bg-slate-800 rounded-xl border overflow-hidden shadow-sm">
+            <table class="w-full text-left">
+                <thead class="bg-slate-50 dark:bg-slate-700 text-slate-500 uppercase text-xs">
+                    <tr>
+                        <th class="p-4">Xe</th>
+                        <th class="p-4">Thời gian</th>
+                        <th class="p-4">Tổng tiền</th>
+                        <th class="p-4">Trạng thái</th>
+                        <th class="p-4 text-right">Hành động</th>
+                    </tr>
+                </thead>
+                <tbody class="divide-y">
+                    {% for booking in bookings %}
+                    <tr>
+                        <td class="p-4 flex items-center gap-3">
+                            <div class="h-10 w-14 rounded bg-cover bg-center bg-slate-200 flex items-center justify-center overflow-hidden"
+                                 style="background-image: url('{% if booking.vehicle.image %}{{ booking.vehicle.image.url }}{% else %}{% static 'img/placeholder.jpg' %}{% endif %}');">
+                                {% if not booking.vehicle.image %}
+                                <span class="material-symbols-outlined text-slate-400 text-sm">image_not_supported</span>
+                                {% endif %}
+                            </div>
+                            <div>
+                                <p class="font-bold text-slate-900 dark:text-white">{{ booking.vehicle.name }}</p>
+                                <p class="text-xs text-slate-500">{{ booking.vehicle.license_plate|default:"N/A" }}</p>
+                            </div>
+                        </td>
+                        <td class="p-4 text-sm text-slate-600 dark:text-slate-300">
+                            {{ booking.start_date|date:"d/m/Y" }} - {{ booking.end_date|date:"d/m/Y" }}
+                        </td>
+                        <td class="p-4 font-semibold text-slate-900 dark:text-white">{{ booking.total_price|floatformat:0 }}đ</td>
+                        <td class="p-4">
+                            <span class="px-2.5 py-1 rounded-full text-xs font-bold
+                                {% if booking.status == 'approved' %}bg-green-100 text-green-700
+                                {% elif booking.status == 'pending' %}bg-blue-100 text-blue-700
+                                {% elif booking.status == 'completed' %}bg-slate-100 text-slate-700
+                                {% else %}bg-red-100 text-red-700{% endif %}">
+                                {{ booking.get_status_display }}
+                            </span>
+                        </td>
+                        <td class="p-4 text-right">
+                            {% if booking.status == 'approved' %}
+                            <a href="{% url 'frontend:booking_return' booking.id %}" class="bg-primary text-white px-3 py-1.5 rounded-lg text-sm hover:bg-opacity-90 transition">Trả xe</a>
+                            {% elif booking.status == 'completed' %}
+                                {% if booking.vehicle.id in reviewed_vehicle_ids %}
+                                <span class="text-green-600 text-sm font-medium">Đã đánh giá</span>
+                                {% else %}
+                                <a href="{% url 'frontend:review_form' booking.id %}" class="border px-3 py-1.5 rounded-lg text-sm hover:bg-slate-50 dark:hover:bg-slate-700 transition">Đánh giá</a>
+                                {% endif %}
+                            {% else %}
+                            <span class="text-slate-400 italic text-xs">N/A</span>
+                            {% endif %}
+                        </td>
+                    </tr>
+                    {% empty %}
+                    <tr><td colspan="5" class="p-20 text-center text-slate-500">Không tìm thấy đơn hàng nào.</td></tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</main>
+{% endblock %}

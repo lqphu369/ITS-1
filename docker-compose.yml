@@ -1,0 +1,45 @@
+version: "3.9"
+
+services:
+  web:
+    build: .
+    container_name: django_web
+    command: python manage.py runserver 0.0.0.0:8000
+    volumes:
+      - .:/app
+    ports:
+      - "8000:8000"
+    depends_on:
+      db:
+        condition: service_healthy
+    # --- PHẦN QUAN TRỌNG ĐÃ THÊM ---
+    environment:
+      # Giúp Django nhận diện các folder con trong 'backend' như là root module
+      - PYTHONPATH=/app/backend
+      # Kết nối DB (dựa trên thông tin service db bên dưới)
+      - DATABASE_NAME=vehicle_rental_system
+      - DATABASE_USER=postgres
+      - DATABASE_PASSWORD=postgres
+      - DATABASE_HOST=db
+      - DATABASE_PORT=5432
+    # -------------------------------
+
+  db:
+    image: postgres:15
+    container_name: postgres_db
+    environment:
+      POSTGRES_DB: vehicle_rental_system
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+volumes:
+  postgres_data:
